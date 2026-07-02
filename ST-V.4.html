@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการผลการเรียนและบันทึกคะแนน ม.1</title>
+    <style>
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 1: รีเซ็ตสไตล์พื้นฐาน (RESET & BASE STYLES)   */
+        /* ======================================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'ChulaCharasNew', 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 2: โครงสร้างเลย์เอาต์ (LAYOUT & CONTAINERS)  */
+        /* ======================================================= */
+        .container {
+            background-color: #ffffff;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ขยายขนาดกล่องเมื่อเข้าสู่หน้าตาราง Excel หรือหน้าแอดมิน */
+        .container.wide-mode {
+            max-width: 1400px;
+        }
+
+        .step-page {
+            display: none;
+        }
+
+        .step-page.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 3: สไตล์หน้า LOGIN รูปแบบใหม่ตามภาพการออกแบบ  */
+        /* ======================================================= */
+        .avatar-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        
+        .login-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #00b050;
+            background-color: #f3f4f6;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .login-header {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 1px;
+            color: #1a202c;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .login-sub {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+
+        h2.app-title {
+            text-align: center;
+            color: #1a202c;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            text-align: center;
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 25px;
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .role-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ffc107;
+            color: #1a202c;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .summary-text {
+            background-color: #f8fafc;
+            padding: 16px;
+            border-left: 4px solid #00b050;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #334155;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.01);
+        }
+
+        .note-text {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 4: ฟอร์มรับข้อมูล (FORMS & INPUTS)           */
+        /* ======================================================= */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background-color: #fff;
+            color: #334155;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 5: ปุ่มกดต่างๆ (BUTTONS)                     */
+        /* ======================================================= */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 20px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-login { background-color: #00b050; }
+        .btn-login:hover { background-color: #008f3f; }
+        .btn-next { background-color: #28a745; }
+        .btn-next:hover { background-color: #218838; }
+        .btn-back { background-color: #6c757d; }
+        .btn-back:hover { background-color: #5a6268; }
+        .btn-save { background-color: #007bff; }
+        .btn-save:hover { background-color: #0056b3; }
+        .btn-logout { background-color: #dc3545; margin-top: 16px; }
+        .btn-logout:hover { background-color: #bd2130; }
+        .btn-admin { background-color: #8b5cf6; }
+        .btn-admin:hover { background-color: #7c3aed; }
+        .btn-danger { background-color: #ef4444; padding: 6px 12px; font-size: 12px; width: auto; display: inline-flex; border-radius: 6px; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-warning { background-color: #f59e0b; padding: 6px 12px; font-size: 12px; width: auto; display: inline-flex; color: #fff; border-radius: 6px; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-success { background-color: #10b981; width: auto; padding: 10px 20px; }
+        .btn-success:hover { background-color: #059669; }
+
+        .login-footer {
+            text-align: right;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+        .login-footer a { color: #00b050; text-decoration: none; font-weight: 500; }
+        .login-footer a:hover { text-decoration: underline; }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 6: ตารางจัดการคะแนนสไตล์ Excel (EXCEL TABLES)  */
+        /* ======================================================= */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        table.excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: center;
+            background: white;
+            min-width: 1100px;
+        }
+
+        table.excel-table th {
+            background-color: #00b050; 
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+        }
+
+        table.excel-table.admin-table th {
+            background-color: #8b5cf6; 
+        }
+
+        table.excel-table.student-mode-table th {
+            background-color: #007bff;
+        }
+
+        table.excel-table td {
+            padding: 10px 8px;
+            border: 1px solid #e2e8f0;
+            vertical-align: middle;
+            color: #4a5568;
+        }
+
+        table.excel-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        table.excel-table tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        table.excel-table input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #00b050;
+        }
+
+        table.excel-table input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            accent-color: #6b7280;
+        }
+
+        table.excel-table input[type="number"] {
+            width: 60px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        table.excel-table input[type="number"]:focus {
+            border-color: #3b82f6;
+        }
+
+        table.excel-table input[type="number"]:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            border: 1px dashed #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .cell-bold {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .cell-total {
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .readonly-mode th {
+            background-color: #64748b !important;
+        }
+        .readonly-cell {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 7: ส่วนจัดวางเลย์เอาต์แอดมิน (ADMIN PANEL LAYOUT) */
+        /* ======================================================= */
+        /* ปรับสไตล์เลย์เอาต์แอดมินให้ต่อกันลงมาด้านล่าง */
+        .admin-vertical-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 25px;
+        }
+        .admin-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .admin-card h4 {
+            margin-bottom: 16px;
+            color: #4c1d95;
+            font-size: 16px;
+            font-weight: 700;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+        .inline-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        
+        /* สไตล์กล่องจัดการรูปภาพ */
+        .avatar-manager-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        .avatar-preview-sm {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #cbd5e1;
+            background-color: #fff;
+        }
+
+        /* สไตล์แสดงภาพตารางสอน */
+        .schedule-img-preview {
+            max-width: 100%;
+            height: auto;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* ======================================================= */
+        /* หมวดหมู่ที่ 8: การแสดงผลบนมือถือ (RESPONSIVE MEDIA QUERIES)*/
+        /* ======================================================= */
+        @media (max-width: 768px) {
+            .btn-group { flex-direction: column; }
+            .inline-form { flex-direction: column; }
+            .inline-form input { width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    
+    <div class="step-page active" id="loginPage">
+        <div class="avatar-container">
+            <img id="loginRoleAvatar" class="login-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
+        </div>
+        <div class="login-header">ACCOUNT LOGIN</div>
+        
+        <div class="form-group">
+            <div class="login-sub">👤 เลือกสถานะผู้ใช้งาน</div>
+            <select id="loginRole" onchange="handleRoleAvatarChange()">
+                <option value="">===== เลือกสถานะ =====</option>
+                <option value="admin_role">ผู้ดูแลระบบ (Admin)</option>
+                <option value="teacher_role">คุณครู / บุคลากร</option>
+                <option value="student_role">นักเรียน / นักศึกษา</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <div class="login-sub" id="usernameLabelText">🔑 รหัสผู้ใช้หรือชื่อผู้ใช้</div>
+            <input type="text" id="username" placeholder="ระบุชื่อผู้ใช้งาน">
+        </div>
+        <div class="form-group">
+            <div class="login-sub" id="passwordLabelText">🔒 รหัสผ่านความปลอดภัย</div>
+            <input type="password" id="password" placeholder="ระบุรหัสผ่านเข้าใช้งาน">
+        </div>
+        <button class="btn-login" id="btnLoginSubmit" onclick="handleLogin()">➜ เข้าสู่ระบบ</button>
+        <div class="login-footer">
+            <a href="#" onclick="alert('กรุณาติดต่อห้องทะเบียนหรือแอดมินเพื่อรีเซ็ตรหัสผ่าน')">ลืมรหัสผ่าน / เปลี่ยนรหัสผ่าน?</a>
+        </div>
+    </div>
+
+    <div class="step-page" id="step1">
+        <div class="role-badge">คุณครู</div>
+        <h2 class="app-title">ระบบบันทึกคะแนน ม.1</h2>
+        <h3>ยินดีต้อนรับคุณครู: <span id="currentTeacherName" style="color:#00b050; font-weight: 700;">-</span></h3>
+        
+        <div class="form-group">
+            <label>เลือกชั้นเรียน/ห้องเรียน:</label>
+            <select id="classroom">
+                <option value="">-- กรุณาเลือกห้องเรียน --</option>
+                <option value="m11">ห้อง ม.1/1</option>
+                <option value="m12">ห้อง ม.1/2</option>
+                <option value="m13">ห้อง ม.1/3</option>
+                <option value="m14">ห้อง ม.1/4</option>
+                <option value="m15">ห้อง ม.1/5</option>
+            </select>
+        </div>
+
+        <button class="btn-next" onclick="generateExcelTable(false)">เปิดตารางบันทึกคะแนน &raquo;</button>
+        <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="step-page" id="teacherExcelPage">
+        <div class="role-badge" id="excelRoleBadge">คุณครู</div>
+        <h2 class="app-title" id="excelTitleText">สมุดบันทึกคะแนนดิบรายห้อง</h2>
+        
+        <p class="summary-text">
+            <strong>ห้องเรียน:</strong> <span id="excelClassroomText">-</span> | 
+            <strong>วิชาหลักของคุณครู:</strong> <span id="excelMainSubjectText">-</span>
+        </p>
+
+        <div class="form-group" style="background: #f1f5f9; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+            <label style="color: #475569; margin-bottom: 6px;">🔍 เลือกสลับวิชาที่ต้องการเรียกดูข้อมูลในห้องนี้:</label>
+            <select id="excelSubjectSwitcher" onchange="switchSubjectInExcelTable()" style="padding: 10px; font-size: 14px;">
+            </select>
+        </div>
+
+        <div class="table-responsive">
+            <table class="excel-table" id="mainExcelTable">
+                <thead id="excelTableHeader">
+                </thead>
+                <tbody id="excelTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note-text" id="excelNoteText">💡 หลังจากทำการกรอกคะแนนหรือเช็คชื่อเสร็จสิ้น กรุณากดปุ่ม "💾 บันทึกข้อมูลคะแนนลงระบบ" ทุกครั้ง</div>
+        
+        <div class="btn-group">
+            <button class="btn-back" id="btnExcelBack" onclick="backToStep1()">&laquo; กลับ</button>
+            <button class="btn-save" id="btnExcelSave" onclick="saveScoreDatabase()">💾 บันทึกข้อมูลคะแนนลงระบบ</button>
+            <button class="btn-logout" onclick="logout()" style="margin-top:0;">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="step-page" id="studentDashboard">
+        <div class="role-badge" style="background:#007bff; color:white;">นักเรียน</div>
+        <h2 class="app-title">ระบบตรวจเช็คผลการเรียน ม.1</h2>
+        <h3>คะแนนสะสมรายวิชาของคุณ</h3>
+        <p class="summary-text">ยินดีต้อนรับ: <span id="stuName" style="font-weight:bold; color:#007bff;">-</span><br>เลขประจำตัวประชาชน: <span id="stuCode" style="font-weight:bold;">-</span></p>
+        
+        <div class="table-responsive">
+            <table class="excel-table student-mode-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ลำดับ</th>
+                        <th>วิชา</th>
+                        <th>พฤติกรรม<br>(10)</th>
+                        <th>ส่งงาน<br>(10)</th>
+                        <th>กลางภาค<br>(30)</th>
+                        <th>ปลายภาค<br>(40)</th>
+                        <th style="background-color: #0d6efd;">รวมคะแนน<br>(100)</th>
+                        <th>สถิติเข้าเรียน</th>
+                        <th>เข้าเรียน (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="studentGradeReport">
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 25px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <h4 style="color:#007bff; font-size:16px; font-weight:700; margin-bottom:10px;">📅 ตารางเรียนประจำภาคเรียน</h4>
+            <img id="studentSchedulePreview" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; display:none;" alt="ตารางเรียน">
+            <p id="studentNoScheduleText" style="color:#64748b; font-size:13px; text-align:center;">ยังไม่ได้อัปโหลดรูปภาพตารางเรียนในระบบ</p>
+        </div>
+
+        <button class="btn-logout" onclick="logout()" style="margin-top:20px;">ออกจากระบบ</button>
+    </div>
+
+    <div class="step-page" id="adminPage">
+        <div class="role-badge" style="background:#8b5cf6; color:white;">แอดมิน</div>
+        <h2 class="app-title" style="color:#6d28d9; margin-bottom: 25px;">แผงควบคุมผู้ดูแลระบบ (Admin Dashboard)</h2>
+        
+        <div class="admin-card" style="margin-bottom: 24px; border: 1px solid #00b050; background-color: #fafdfb;">
+            <h4 style="color: #008f3f; border-bottom-color: #e6f6ed;">🖼️ ตั้งค่าและเปลี่ยนรูปโปรไฟล์หน้า Login (แยกตามสถานะ)</h4>
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px;">เลือกไฟล์รูปภาพเพื่อเปลี่ยนรูปวงกลมหน้าเข้าสู่ระบบแยกตามบทบาท:</p>
+            
+            <div class="avatar-manager-box">
+                <img id="prevAdminAv" class="avatar-preview-sm" src="" alt="Admin">
+                <div style="flex-grow:1;">
+                    <span style="font-size:13px; font-weight:600; color: #1a202c;">1. รูปโปรไฟล์แอดมิน:</span>
+                    <input type="file" accept="image/*" onchange="uploadAvatarFile('admin_role', this)" style="padding:4px; font-size:12px; margin-top:4px; border: none; background: transparent;">
+                </div>
+            </div>
+
+            <div class="avatar-manager-box">
+                <img id="prevTeacherAv" class="avatar-preview-sm" src="" alt="Teacher">
+                <div style="flex-grow:1;">
+                    <span style="font-size:13px; font-weight:600; color: #1a202c;">2. รูปโปรไฟล์คุณครู:</span>
+                    <input type="file" accept="image/*" onchange="uploadAvatarFile('teacher_role', this)" style="padding:4px; font-size:12px; margin-top:4px; border: none; background: transparent;">
+                </div>
+            </div>
+
+            <div class="avatar-manager-box">
+                <img id="prevStudentAv" class="avatar-preview-sm" src="" alt="Student">
+                <div style="flex-grow:1;">
+                    <span style="font-size:13px; font-weight:600; color: #1a202c;">3. รูปโปรไฟล์นักเรียน/นักศึกษา:</span>
+                    <input type="file" accept="image/*" onchange="uploadAvatarFile('student_role', this)" style="padding:4px; font-size:12px; margin-top:4px; border: none; background: transparent;">
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card" style="margin-bottom: 24px; border: 1px solid #3b82f6; background-color: #f0f7ff;">
+            <h4 style="color: #1d4ed8; border-bottom-color: #dbeafe;">📅 อัปเดตและแสดงรูปภาพตารางสอนประจำภาคเรียน</h4>
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px;">อัปโหลดรูปภาพแผนผังหรือตารางเรียนเพื่อให้นักเรียนใช้ตรวจสอบในระบบ:</p>
+            <input type="file" accept="image/*" onchange="uploadScheduleImage(this)" style="padding:8px; font-size:13px; border: 1px dashed #3b82f6; border-radius:8px; width:100%; background: #fff;">
+            <img id="adminSchedulePreview" class="schedule-img-preview" src="" alt="Schedule Preview">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="admin-card">
+                <h4>📆 ตั้งค่าจำนวนวันเช็คชื่อรวม (ภาคเรียน)</h4>
+                <div class="inline-form" style="margin-bottom: 8px;">
+                    <input type="number" id="adminTotalDaysInput" min="1" max="30" style="width: 110px; padding: 10px;">
+                    <button class="btn-admin" onclick="updateTotalDays()" style="width: auto; padding: 10px 20px;">💾 บันทึก</button>
+                </div>
+                <small style="color: #64748b;">* ปัจจุบันตั้งไว้: <span id="currentDaysLabel" style="font-weight: 700; color: #ef4444;">10</span> ครั้ง</small>
+            </div>
+            
+            <div class="admin-card" style="border: 1px solid #8b5cf6; background-color: #faf8ff;">
+                <h4 style="color: #6d28d9; border-bottom-color: #eedffa;">🔍 สิทธิ์แอดมิน: ดูและแก้ไขข้อมูลทุกวิชา</h4>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <select id="adminViewRoom" style="padding: 10px; font-size: 13px;">
+                        <option value="m11">ห้อง ม.1/1</option>
+                        <option value="m12">ห้อง ม.1/2</option>
+                        <option value="m13">ห้อง ม.1/3</option>
+                        <option value="m14">ห้อง ม.1/4</option>
+                        <option value="m15">ห้อง ม.1/5</option>
+                    </select>
+                </div>
+                <button class="btn-admin" onclick="generateExcelTable(true)" style="padding: 10px 16px; font-size: 14px;">👁️ เปิดตารางสรุปคะแนนประจำห้อง</button>
+            </div>
+        </div>
+
+        <div class="admin-vertical-layout">
+            <div class="admin-card">
+                <h4>🎒 จัดการรหัสและรายชื่อนักเรียน</h4>
+                <div class="form-group">
+                    <label>เลือกห้องเรียน:</label>
+                    <select id="adminStudentRoom" onchange="renderAdminStudentTable()">
+                        <option value="m11">ห้อง ม.1/1</option>
+                        <option value="m12">ห้อง ม.1/2</option>
+                        <option value="m13">ห้อง ม.1/3</option>
+                        <option value="m14">ห้อง ม.1/4</option>
+                        <option value="m15">ห้อง ม.1/5</option>
+                    </select>
+                </div>
+                <div class="inline-form">
+                    <input type="text" id="newStudentId" placeholder="เลขบัตร ปชช. (ใช้ล็อกอิน)" style="padding: 10px; width: 45%;">
+                    <input type="text" id="newStudentName" placeholder="ชื่อ-นามสกุลนักเรียน" style="padding: 10px; width: 55%;">
+                </div>
+                <div class="form-group">
+                    <label>รหัสผ่านเข้าชั้นเรียน (รหัสห้องตามด้วยเลขที่ เช่น 5001 หรือ 501):</label>
+                    <input type="text" id="newStudentPassword" placeholder="กำหนดรหัสผ่านเข้าเรียนเฉพาะตัว" style="padding: 10px;">
+                </div>
+                <input type="hidden" id="editingStudentOldId" value="">
+                <button class="btn-success" id="btnStudentSubmit" onclick="addNewStudent()">➕ เพิ่มนักเรียนเข้าห้อง</button>
+                <button class="btn-back" id="btnCancelEditStudent" onclick="cancelEditStudent()" style="display:none; margin-top:8px; padding:8px; font-size:14px;">ยกเลิกการแก้ไข</button>
+
+                <div class="table-responsive" style="max-height: 280px; margin-top: 20px;">
+                    <table class="excel-table admin-table">
+                        <thead>
+                            <tr>
+                                <th>เลขบัตร (Login)</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>รหัสผ่าน (ห้อง+เลขที่)</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminStudentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h4>👨‍🏫 จัดการบัญชีครูและรหัสวิชาประจำตัว</h4>
+                <div class="form-group">
+                    <label>บัญชีผู้ใช้ & รหัสผ่าน:</label>
+                    <div class="inline-form" style="margin-bottom: 8px;">
+                        <input type="text" id="newTeacherUser" placeholder="ชื่อผู้ใช้ (Username)" style="padding: 10px; width:50%;">
+                        <input type="text" id="newTeacherPass" placeholder="รหัสผ่าน (Password)" style="padding: 10px; width:50%;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>รหัสวิชา & ชื่อวิชาที่ครูคนนี้สอน:</label>
+                    <div class="inline-form">
+                        <input type="text" id="newTeacherCourseId" placeholder="รหัสวิชา" style="padding: 10px; width:35%;">
+                        <input type="text" id="newTeacherCourseName" placeholder="ชื่อวิชา" style="padding: 10px; width:65%;">
+                    </div>
+                </div>
+
+                <input type="hidden" id="editingTeacherOldUser" value="">
+                <button class="btn-success" id="btnTeacherSubmit" onclick="addNewTeacher()">➕ เพิ่ม/บันทึกบัญชีครู</button>
+                <button class="btn-back" id="btnCancelEditTeacher" onclick="cancelEditTeacher()" style="display:none; margin-top:8px; padding:8px; font-size:14px;">ยกเลิกการแก้ไข</button>
+
+                <div class="table-responsive" style="max-height: 280px; margin-top: 20px;">
+                    <table class="excel-table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>รหัสวิชา</th>
+                                <th>ชื่อวิชา</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTeacherTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-logout" onclick="logout()" style="margin-top:30px;">ออกจากระบบแอดมิน</button>
+    </div>
+</div>
+
+<script>
+// =======================================================
+// 🗂️ หมวดหมู่ที่ 1: ฐานข้อมูลเริ่มต้น (DATABASES)
+// =======================================================
+
+const defaultStudentsData = {
+    m11: { 
+        "1234567890111": { name: "เด็กชาย ณัฐพงศ์ ใจดี", pass: "101" }, 
+        "1234567890112": { name: "เด็กชาย ธนกฤต สุขสม", pass: "102" } 
+    },
+    m12: { 
+        "1234567890121": { name: "เด็กหญิง อริสา มณีโชติ", pass: "201" }, 
+        "1234567890122": { name: "เด็กชาย กิตติพงศ์ ศรีสุข", pass: "202" } 
+    },
+    m13: { 
+        "1234567890131": { name: "เด็กชาย ชัยวัฒน์ เพชรทอง", pass: "301" } 
+    },
+    m14: { 
+        "1234567890141": { name: "เด็กหญิง กานต์พิชชา รุ่งเรือง", pass: "401" } 
+    },
+    m15: { 
+        "1234567890151": { name: "เด็กชาย นนทกร ชัยชนะ", pass: "501" },
+        "1234567890152": { name: "เด็กหญิง ชลธิชา แสงทอง", pass: "502" }
+    }
+};
+
+const defaultTeachersData = {
+    "supakrit": { pass: "1234", courseId: "123", courseName: "คณิตศาสตร์" },
+    "it": { pass: "1111", courseId: "456", courseName: "เขียนโปรแกรมคอมพิวเตอร์" },
+    "krunee": { pass: "abcd", courseId: "789", courseName: "ภาษาอังกฤษเสริม" }
+};
+
+const defaultAvatars = {
+    "default": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+    "admin_role": "https://cdn-icons-png.flaticon.com/512/2206/2206368.png",
+    "teacher_role": "https://cdn-icons-png.flaticon.com/512/1995/1995574.png",
+    "student_role": "https://cdn-icons-png.flaticon.com/512/3413/3413535.png"
+};
+
+let studentsData = JSON.parse(localStorage.getItem("studentsData")) || defaultStudentsData;
+let teachersData = JSON.parse(localStorage.getItem("teachersData")) || defaultTeachersData;
+let TOTAL_ATTENDANCE_DAYS = parseInt(localStorage.getItem("TOTAL_ATTENDANCE_DAYS")) || 10;
+let scoreDatabase = JSON.parse(localStorage.getItem("scoreDatabase")) || {};
+let roleAvatars = JSON.parse(localStorage.getItem("roleAvatars")) || defaultAvatars;
+let scheduleImage = localStorage.getItem("scheduleImage") || "";
+
+let currentLoggedInTeacher = "";
+let isAdminViewing = false;
+let globalCurrentRoom = ""; 
+let globalCurrentActiveCourseId = ""; 
+
+let courseNamesMap = JSON.parse(localStorage.getItem("courseNamesMap")) || { "123": "คณิตศาสตร์", "456": "เขียนโปรแกรมคอมพิวเตอร์", "789": "ภาษาอังกฤษเสริม" };
+
+// ตรวจจับคีย์บอร์ด Spacebar หรือ Enter สำหรับการคลิกล็อกอิน
+window.addEventListener("keydown", function(event) {
+    if (document.getElementById("loginPage").classList.contains("active")) {
+        if (event.key === " " || event.code === "Space" || event.key === "Enter" || event.code === "Enter") {
+            event.preventDefault(); 
+            handleLogin();
+        }
+    }
+});
+
+// เรียกทำงานโหลดหน้าแรก
+handleRoleAvatarChange();
+
+// =======================================================
+// 🖼️ ระบบตั้งค่าและเปลี่ยนรูปโปรไฟล์ / ตารางสอน
+// =======================================================
+function handleRoleAvatarChange() {
+    let role = document.getElementById("loginRole").value;
+    let imgEl = document.getElementById("loginRoleAvatar");
+    
+    let userInp = document.getElementById("username");
+    let passInp = document.getElementById("password");
+    let userLbl = document.getElementById("usernameLabelText");
+    let passLbl = document.getElementById("passwordLabelText");
+
+    if(role === "student_role") {
+        userLbl.innerText = "🔑 เลขบัตรประจำตัวประชาชน";
+        passLbl.innerText = "🔒 รหัสผ่าน";
+        userInp.placeholder = "กรอกเลขบัตรประจำตัวประชาชน";
+        passInp.placeholder = "กรอกรหัสประจำตัวห้องและเลขที่";
+    } else {
+        userLbl.innerText = "🔑 รหัสผู้ใช้หรือชื่อผู้ใช้";
+        passLbl.innerText = "🔒 รหัสผ่านความปลอดภัย";
+        userInp.placeholder = "ระบุชื่อผู้ใช้งาน";
+        passInp.placeholder = "ระบุรหัสผ่านเข้าใช้งาน";
+    }
+    
+    if(!role) {
+        imgEl.src = roleAvatars["default"] || defaultAvatars["default"];
+        imgEl.style.borderColor = "#00b050";
+    } else {
+        imgEl.src = roleAvatars[role] || defaultAvatars[role];
+        if(role === 'admin_role') imgEl.style.borderColor = "#8b5cf6";
+        else if(role === 'teacher_role') imgEl.style.borderColor = "#ffc107";
+        else imgEl.style.borderColor = "#007bff";
+    }
+}
+
+function uploadAvatarFile(role, input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            let base64Img = e.target.result;
+            roleAvatars[role] = base64Img;
+            localStorage.setItem("roleAvatars", JSON.stringify(roleAvatars));
+            updateAdminAvatarPreviews();
+            handleRoleAvatarChange();
+            alert("อัปเดตรูปภาพโปรไฟล์เรียบร้อยแล้ว!");
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function updateAdminAvatarPreviews() {
+    document.getElementById("prevAdminAv").src = roleAvatars["admin_role"] || defaultAvatars["admin_role"];
+    document.getElementById("prevTeacherAv").src = roleAvatars["teacher_role"] || defaultAvatars["teacher_role"];
+    document.getElementById("prevStudentAv").src = roleAvatars["student_role"] || defaultAvatars["student_role"];
+}
+
+// อัปโหลดรูปภาพตารางสอนลงระบบ localStorage
+function uploadScheduleImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            scheduleImage = e.target.result;
+            localStorage.setItem("scheduleImage", scheduleImage);
+            renderSchedulePreview();
+            alert("อัปโหลดและบันทึกรูปภาพตารางสอนสำเร็จ!");
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function renderSchedulePreview() {
+    let adminPreview = document.getElementById("adminSchedulePreview");
+    if (scheduleImage) {
+        adminPreview.src = scheduleImage;
+        adminPreview.style.display = "block";
+    } else {
+        adminPreview.style.display = "none";
+    }
+}
+
+
+// =======================================================
+// 🔐 หมวดหมู่ที่ 2: ระบบเข้าสู่ระบบตามเงื่อนไขที่อัปเดต (AUTHENTICATION SYSTEM)
+// =======================================================
+function handleLogin() {
+    var role = document.getElementById("loginRole").value;
+    var user = document.getElementById("username").value.trim();
+    var pass = document.getElementById("password").value.trim();
+
+    if (!role) { alert("กรุณาเลือกสถานะเข้าสู่ระบบก่อนครับ!"); return; }
+
+    if (role === "admin_role") {
+        if (user.toLowerCase() === "admin" && pass === "admin") {
+            alert("ยินดีต้อนรับผู้ดูแลระบบ เข้าสู่แผงควบคุมระบบจัดการข้อมูล");
+            document.getElementById("mainContainer").classList.add("wide-mode");
+            updateAdminAvatarPreviews();
+            renderSchedulePreview();
+            initAdminPanel();
+            showPage("adminPage");
+            return;
+        }
+    }
+
+    if (role === "teacher_role") {
+        let lowercaseUser = user.toLowerCase();
+        if (teachersData[lowercaseUser] && teachersData[lowercaseUser].pass === pass) {
+            alert("ยินดีต้อนรับคุณครู เข้าสู่ระบบสมุดบันทึกคะแนน");
+            currentLoggedInTeacher = lowercaseUser;
+            isAdminViewing = false;
+            document.getElementById("currentTeacherName").innerText = lowercaseUser;
+            showPage("step1");
+            return;
+        }
+    } 
+    
+    if (role === "student_role") {
+        var foundName = null;
+        var foundId = null;
+
+        for (let room in studentsData) {
+            if (studentsData[room][user]) {
+                if (studentsData[room][user].pass === pass) {
+                    foundName = studentsData[room][user].name;
+                    foundId = user;
+                    break;
+                }
+            }
+        }
+
+        if (foundName) {
+            alert("ยินดีต้อนรับ " + foundName + " เข้าสู่ระบบตรวจเช็คคะแนน");
+            document.getElementById("stuName").innerText = foundName;
+            document.getElementById("stuCode").innerText = foundId;
+            document.getElementById("mainContainer").classList.add("wide-mode");
+            displayStudentGrades(foundId);
+            
+            // แสดงตารางสอนของนักเรียนตอนล็อกอินสำเร็จ
+            let stuSchedule = document.getElementById("studentSchedulePreview");
+            let stuNoText = document.getElementById("studentNoScheduleText");
+            if(scheduleImage) {
+                stuSchedule.src = scheduleImage;
+                stuSchedule.style.display = "block";
+                stuNoText.style.display = "none";
+            } else {
+                stuSchedule.style.display = "none";
+                stuNoText.style.display = "block";
+            }
+
+            showPage("studentDashboard");
+            return;
+        }
+    }
+    alert("ข้อมูลเข้าสู่ระบบไม่ถูกต้อง หรือเลือกสถานะไม่ถูกต้อง!");
+}
+
+function logout() {
+    document.getElementById("mainContainer").classList.remove("wide-mode");
+    document.getElementById("loginRole").value = "";
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+    currentLoggedInTeacher = "";
+    isAdminViewing = false;
+    globalCurrentRoom = "";
+    globalCurrentActiveCourseId = "";
+    cancelEditStudent();
+    cancelEditTeacher();
+    handleRoleAvatarChange();
+    showPage("loginPage");
+}
+
+
+// =======================================================
+// 👨‍🏫 หมวดหมู่ที่ 3: ระบบจัดการและแสดงผลคะแนนร่วม (CORE OPERATIONS)
+// =======================================================
+function saveScoreDatabase() {
+    localStorage.setItem("scoreDatabase", JSON.stringify(scoreDatabase));
+    alert("💾 บันทึกข้อมูลคะแนนและสถิติการเข้าเรียนลงสู่ระบบสำเร็จเรียบร้อยแล้ว!");
+}
+
+function generateExcelTable(isAdminMode) {
+    isAdminViewing = isAdminMode;
+    
+    if (isAdminViewing) {
+        globalCurrentRoom = document.getElementById("adminViewRoom").value;
+        let keys = Object.keys(courseNamesMap);
+        globalCurrentActiveCourseId = keys.length > 0 ? keys[0] : "";
+    } else {
+        globalCurrentRoom = document.getElementById("classroom").value;
+        if (!globalCurrentRoom) { alert("กรุณาเลือกห้องเรียนก่อนครับ!"); return; }
+        globalCurrentActiveCourseId = teachersData[currentLoggedInTeacher].courseId;
+    }
+    
+    updateExcelSubjectSwitcherOptions();
+    renderActualExcelTable();
+}
+
+function updateExcelSubjectSwitcherOptions() {
+    let switcher = document.getElementById("excelSubjectSwitcher");
+    switcher.innerHTML = "";
+    
+    for (let cId in courseNamesMap) {
+        let opt = document.createElement("option");
+        opt.value = cId;
+        opt.innerText = `${courseNamesMap[cId]} (รหัส ${cId})`;
+        
+        if (cId === globalCurrentActiveCourseId) {
+            opt.selected = true;
+        }
+        switcher.appendChild(opt);
+    }
+}
+
+function switchSubjectInExcelTable() {
+    globalCurrentActiveCourseId = document.getElementById("excelSubjectSwitcher").value;
+    renderActualExcelTable();
+}
+
+function renderActualExcelTable() {
+    var room = globalCurrentRoom;
+    var course = globalCurrentActiveCourseId;
+    
+    if(!course) { alert("ไม่มีข้อมูลรหัสรายวิชาในระบบ ไม่สามารถวาดตารางได้ครับ"); return; }
+    
+    let isEditable = false;
+    if (isAdminViewing) {
+        isEditable = true; 
+        document.getElementById("excelRoleBadge").innerText = "แอดมิน";
+        document.getElementById("excelRoleBadge").style.background = "#8b5cf6";
+        document.getElementById("excelRoleBadge").style.color = "white";
+        document.getElementById("btnExcelBack").setAttribute("onclick", "showPage('adminPage')");
+        document.getElementById("btnExcelSave").style.display = "block";
+        document.getElementById("excelNoteText").innerText = "💡 สิทธิ์แอดมิน: สามารถตรวจสอบและดำเนินการแก้ไขบันทึกคะแนนแทนอาจารย์ทุกท่านได้";
+    } else {
+        let myMainCourseId = teachersData[currentLoggedInTeacher].courseId;
+        document.getElementById("excelRoleBadge").innerText = "คุณครู";
+        document.getElementById("excelRoleBadge").style.background = "#ffc107";
+        document.getElementById("excelRoleBadge").style.color = "#333";
+        document.getElementById("btnExcelBack").setAttribute("onclick", "backToStep1()");
+        
+        if (course === myMainCourseId) {
+            isEditable = true; 
+            document.getElementById("btnExcelSave").style.display = "block";
+            document.getElementById("excelNoteText").innerText = "💡 นี่คือวิชาที่คุณครูรับผิดชอบ สามารถกรอกคะแนนและสถิติเข้าเรียนได้ตามปกติ";
+        } else {
+            isEditable = false; 
+            document.getElementById("btnExcelSave").style.display = "none"; 
+            document.getElementById("excelNoteText").innerText = "🔒 โหมดอ่านอย่างเดียว: ข้อมูลนี้เป็นของวิชาอื่น คุณครูสามารถดูสถิติเพื่อเปรียบเทียบได้เท่านั้น";
+        }
+    }
+    
+    var roomText = (room === "m11"?"ห้อง ม.1/1":room === "m12"?"ห้อง ม.1/2":room === "m13"?"ห้อง ม.1/3":room === "m14"?"ห้อง ม.1/4":"ห้อง ม.1/5");
+    var mainSubjectName = isAdminViewing ? "สิทธิ์ควบคุมสูงสุด" : courseNamesMap[teachersData[currentLoggedInTeacher].courseId];
+    
+    document.getElementById("excelClassroomText").innerText = roomText;
+    document.getElementById("excelMainSubjectText").innerText = mainSubjectName;
+    
+    let tableEl = document.getElementById("mainExcelTable");
+    if(isEditable) tableEl.classList.remove("readonly-mode");
+    else tableEl.classList.add("readonly-mode");
+
+    var headerHTML = `
+        <tr>
+            <th rowspan="2">รหัสบัตร</th>
+            <th rowspan="2" style="min-width: 150px;">ชื่อ-นามสกุล</th>
+            <th colspan="${TOTAL_ATTENDANCE_DAYS}">การเช็คชื่อเข้าเรียน วันต่อวัน (${TOTAL_ATTENDANCE_DAYS} ครั้ง)</th>
+            <th rowspan="2">มาเรียน<br>(วัน)</th>
+            <th rowspan="2">ร้อยละ<br>(%)</th>
+            <th rowspan="2">พฤติกรรม<br>(10)</th>
+            <th rowspan="2">ส่งงาน<br>(10)</th>
+            <th rowspan="2">กลางภาค<br>(30)</th>
+            <th rowspan="2">ปลายภาค<br>(40)</th>
+            <th rowspan="2" style="background-color: #007bff;">รวมคะแนน<br>(100)</th>
+        </tr>
+        <tr>
+    `;
+    for(let i=1; i<=TOTAL_ATTENDANCE_DAYS; i++) {
+        headerHTML += `<th>ครั้ง${i}</th>`;
+    }
+    headerHTML += `</tr>`;
+    document.getElementById("excelTableHeader").innerHTML = headerHTML;
+
+    var tbody = document.getElementById("excelTableBody");
+    tbody.innerHTML = "";
+    
+    var students = studentsData[room] || {};
+    let disabledAttr = isEditable ? "" : "disabled";
+    
+    for (let id in students) {
+        if (!scoreDatabase[room]) scoreDatabase[room] = {};
+        if (!scoreDatabase[room][course]) scoreDatabase[room][course] = {};
+        
+        if (!scoreDatabase[room][course][id]) {
+            scoreDatabase[room][course][id] = { 
+                attendance: Array(TOTAL_ATTENDANCE_DAYS).fill(0), 
+                behavior: 10, 
+                assignment: 10, 
+                midterm: 0, 
+                final: 0, 
+                total: 20 
+            };
+        }
+        
+        var currentData = scoreDatabase[room][course][id];
+        
+        if (!Array.isArray(currentData.attendance)) {
+            currentData.attendance = Array(TOTAL_ATTENDANCE_DAYS).fill(0);
+        } else if (currentData.attendance.length !== TOTAL_ATTENDANCE_DAYS) {
+            let tempArr = Array(TOTAL_ATTENDANCE_DAYS).fill(0);
+            for(let i=0; i<TOTAL_ATTENDANCE_DAYS; i++) {
+                if(currentData.attendance[i] !== undefined) tempArr[i] = currentData.attendance[i];
+            }
+            currentData.attendance = tempArr;
+        }
+        
+        let checkedCount = currentData.attendance.reduce((sum, current) => sum + current, 0);
+        var pct = ((checkedCount / TOTAL_ATTENDANCE_DAYS) * 100).toFixed(1);
+        
+        var tr = document.createElement("tr");
+        
+        let attendanceCheckboxesHTML = "";
+        for (let i = 0; i < TOTAL_ATTENDANCE_DAYS; i++) {
+            let isChecked = currentData.attendance[i] === 1 ? "checked" : "";
+            attendanceCheckboxesHTML += `<td><input type="checkbox" ${isChecked} ${disabledAttr} onchange="toggleAttendance('${room}', '${course}', '${id}', ${i}, this)"></td>`;
+        }
+        
+        let tdCellClass = isEditable ? "" : "class='readonly-cell'";
+        
+        tr.innerHTML = `
+            <td class="cell-bold ${!isEditable?'readonly-cell':''}">${id.substring(0,4)}...${id.substring(id.length-3)}</td>
+            <td style="text-align:left; font-weight:500;" ${tdCellClass}>${students[id].name}</td>
+            ${attendanceCheckboxesHTML}
+            <td id="count_${id}" class="cell-bold" ${tdCellClass}>${checkedCount}</td>
+            <td id="pct_${id}" class="cell-bold" ${tdCellClass}>${pct}%</td>
+            <td ${tdCellClass}><input type="number" min="0" max="10" ${disabledAttr} value="${currentData.behavior}" oninput="updateExcelRow('${room}', '${course}', '${id}', 'behavior', this)"></td>
+            <td ${tdCellClass}><input type="number" min="0" max="10" ${disabledAttr} value="${currentData.assignment}" oninput="updateExcelRow('${room}', '${course}', '${id}', 'assignment', this)"></td>
+            <td ${tdCellClass}><input type="number" min="0" max="30" ${disabledAttr} value="${currentData.midterm}" oninput="updateExcelRow('${room}', '${course}', '${id}', 'midterm', this)"></td>
+            <td ${tdCellClass}><input type="number" min="0" max="40" ${disabledAttr} value="${currentData.final}" oninput="updateExcelRow('${room}', '${course}', '${id}', 'final', this)"></td>
+            <td id="total_${id}" class="cell-total" style="${isEditable?'background-color: #ebf5ff;':'background-color: #f3f4f6; color:#6b7280;'}">${parseFloat(currentData.total).toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+    
+    document.getElementById("mainContainer").classList.add("wide-mode");
+    showPage("teacherExcelPage");
+}
+
+function toggleAttendance(room, course, id, dayIndex, checkbox) {
+    let currentStudent = scoreDatabase[room][course][id];
+    currentStudent.attendance[dayIndex] = checkbox.checked ? 1 : 0;
+    
+    let checkedCount = currentStudent.attendance.reduce((sum, val) => sum + val, 0);
+    let pct = ((checkedCount / TOTAL_ATTENDANCE_DAYS) * 100).toFixed(1);
+    
+    document.getElementById(`count_${id}`).innerText = checkedCount;
+    document.getElementById(`pct_${id}`).innerText = pct + "%";
+}
+
+function updateExcelRow(room, course, id, field, input) {
+    var val = parseFloat(input.value);
+    if (isNaN(val) || val < 0) val = 0;
+    
+    if (field === 'behavior' && val > 10) { val = 10; input.value = 10; }
+    if (field === 'assignment' && val > 10) { val = 10; input.value = 10; }
+    if (field === 'midterm' && val > 30) { val = 30; input.value = 30; }
+    if (field === 'final' && val > 40) { val = 40; input.value = 40; }
+    
+    scoreDatabase[room][course][id][field] = val;
+    var data = scoreDatabase[room][course][id];
+    
+    var newTotal = parseFloat(data.behavior) + parseFloat(data.assignment) + parseFloat(data.midterm) + parseFloat(data.final);
+    scoreDatabase[room][course][id]['total'] = newTotal;
+    
+    document.getElementById(`total_${id}`).innerText = newTotal.toFixed(1);
+}
+
+function backToStep1() {
+    document.getElementById("mainContainer").classList.remove("wide-mode");
+    showPage("step1");
+}
+
+
+// =======================================================
+// 👶 หมวดหมู่ที่ 4: ระบบฝั่งนักเรียน ดึงรายงานเกรด (STUDENT OPERATIONS)
+// =======================================================
+function displayStudentGrades(studentID) {
+    var reportTable = document.getElementById("studentGradeReport");
+    reportTable.innerHTML = "";
+    
+    let hasData = false;
+    let indexCounter = 1; 
+    
+    for (let room in scoreDatabase) {
+        if (studentsData[room] && studentsData[room][studentID]) {
+            for (let course in scoreDatabase[room]) {
+                if (scoreDatabase[room][course][studentID]) {
+                    hasData = true;
+                    var d = scoreDatabase[room][course][studentID];
+                    var subjectName = courseNamesMap[course] || "วิชารหัส " + course;
+                    
+                    let checkedCount = 0;
+                    if (Array.isArray(d.attendance)) {
+                        checkedCount = d.attendance.reduce((sum, val) => sum + val, 0);
+                    }
+                    var pct = ((checkedCount / TOTAL_ATTENDANCE_DAYS) * 100).toFixed(1);
+                    
+                    var tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="cell-bold" style="color:#666;">${indexCounter}</td>
+                        <td style="text-align:left; font-weight:bold; color:#333;">${subjectName}</td>
+                        <td>${d.behavior}</td>
+                        <td>${d.assignment}</td>
+                        <td>${d.midterm}</td>
+                        <td>${d.final}</td>
+                        <td class="cell-total" style="background-color: #ebf5ff; font-size:14px;">${parseFloat(d.total).toFixed(1)}</td>
+                        <td style="font-weight: 500;">${checkedCount} / ${TOTAL_ATTENDANCE_DAYS} วัน</td>
+                        <td style="font-weight:bold; color:#00b050;">${pct}%</td>
+                    `;
+                    reportTable.appendChild(tr);
+                    indexCounter++;
+                }
+            }
+        }
+    }
+    
+    if (!hasData) {
+        reportTable.innerHTML = `<tr><td colspan="9" style="color:#666; padding:20px;">ยังไม่มีการบันทึกข้อมูลเกรดหรือคะแนนเก็บของคุณในระบบขณะนี้</td></tr>`;
+    }
+}
+
+
+// =======================================================
+// ⚙️ หมวดหมู่ที่ 5: ระบบจัดการสำหรับแอดมิน (ADMIN OPERATIONS)
+// =======================================================
+function initAdminPanel() {
+    document.getElementById("adminTotalDaysInput").value = TOTAL_ATTENDANCE_DAYS;
+    document.getElementById("currentDaysLabel").innerText = TOTAL_ATTENDANCE_DAYS;
+    renderAdminStudentTable();
+    renderAdminTeacherTable();
+}
+
+function updateTotalDays() {
+    let days = parseInt(document.getElementById("adminTotalDaysInput").value);
+    if (isNaN(days) || days < 1 || days > 30) {
+        alert("กรุณาระบุจำนวนวันให้ถูกต้อง (อยู่ระหว่าง 1 ถึง 30 วัน)");
+        return;
+    }
+    TOTAL_ATTENDANCE_DAYS = days;
+    localStorage.setItem("TOTAL_ATTENDANCE_DAYS", days);
+    document.getElementById("currentDaysLabel").innerText = days;
+    alert("📆 อัปเดตและบันทึกจำนวนวันเช็คชื่อรวมสำเร็จ!");
+}
+
+function renderAdminStudentTable() {
+    let room = document.getElementById("adminStudentRoom").value;
+    let tbody = document.getElementById("adminStudentTableBody");
+    tbody.innerHTML = "";
+    
+    let students = studentsData[room] || {};
+    for (let id in students) {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="cell-bold">${id}</td>
+            <td style="text-align: left;">${students[id].name}</td>
+            <td style="color:#10b981; font-weight:bold;">${students[id].pass}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-warning" onclick="startEditStudent('${room}', '${id}', '${students[id].name}', '${students[id].pass}')">✏️ แก้ไข</button>
+                    <button class="btn-danger" onclick="deleteStudent('${room}', '${id}')">🗑️ ลบ</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+function addNewStudent() {
+    let room = document.getElementById("adminStudentRoom").value;
+    let id = document.getElementById("newStudentId").value.trim();
+    let name = document.getElementById("newStudentName").value.trim();
+    let pass = document.getElementById("newStudentPassword").value.trim();
+    let oldId = document.getElementById("editingStudentOldId").value;
+    
+    if (!id || !name || !pass) { alert("กรุณากรอกข้อมูลเลขบัตร ชื่อ-นามสกุล และรหัสผ่านห้องของนักเรียนให้ครบถ้วน!"); return; }
+    
+    // 🔍 ปรับปรุงระบบตรวจสอบความปลอดภัย: ห้ามรหัสนักเรียนซ้ำในทุก ๆ ห้องเรียน
+    if (oldId === "" || oldId !== id) {
+        for (let targetRoom in studentsData) {
+            if (studentsData[targetRoom][id]) { 
+                alert(`ขออภัย! มีนักเรียนรหัสเลขบัตรประจำตัวนี้ (${id}) อยู่ในระบบแล้วที่ [ห้อง ${targetRoom === 'm11' ? 'ม.1/1' : targetRoom === 'm12' ? 'ม.1/2' : targetRoom === 'm13' ? 'ม.1/3' : targetRoom === 'm14' ? 'ม.1/4' : 'ม.1/5'}] ไม่สามารถเพิ่มซ้ำได้!`); 
+                return; 
+            }
+        }
+    }
+    
+    if (oldId !== "" && oldId !== id) {
+        delete studentsData[room][oldId];
+        if (scoreDatabase[room]) {
+            for (let course in scoreDatabase[room]) {
+                if (scoreDatabase[room][course][oldId]) {
+                    scoreDatabase[room][course][id] = scoreDatabase[room][course][oldId];
+                    delete scoreDatabase[room][course][oldId];
+                }
+            }
+        }
+    }
+    
+    studentsData[room][id] = { name: name, pass: pass };
+    localStorage.setItem("studentsData", JSON.stringify(studentsData));
+    localStorage.setItem("scoreDatabase", JSON.stringify(scoreDatabase));
+    
+    cancelEditStudent();
+    renderAdminStudentTable();
+    alert("🎒 บันทึกข้อมูลข้อมูลนักเรียนตามระบบเรียบร้อย!");
+}
+
+function startEditStudent(room, id, name, pass) {
+    document.getElementById("newStudentId").value = id;
+    document.getElementById("newStudentName").value = name;
+    document.getElementById("newStudentPassword").value = pass;
+    document.getElementById("editingStudentOldId").value = id;
+    
+    document.getElementById("btnStudentSubmit").innerText = "💾 บันทึกการแก้ไข";
+    document.getElementById("btnCancelEditStudent").style.display = "block";
+}
+
+function cancelEditStudent() {
+    document.getElementById("newStudentId").value = "";
+    document.getElementById("newStudentName").value = "";
+    document.getElementById("newStudentPassword").value = "";
+    document.getElementById("editingStudentOldId").value = "";
+    
+    document.getElementById("btnStudentSubmit").innerText = "➕ เพิ่มนักเรียนเข้าห้อง";
+    document.getElementById("btnCancelEditStudent").style.display = "none";
+}
+
+function deleteStudent(room, id) {
+    if (confirm(`คุณต้องการลบรายชื่อนักเรียนรหัสบัตร ${id} ออกจากระบบใช่หรือไม่? ข้อมูลคะแนนจะหายไปด้วย`)) {
+        delete studentsData[room][id];
+        localStorage.setItem("studentsData", JSON.stringify(studentsData));
+        
+        if (scoreDatabase[room]) {
+            for (let course in scoreDatabase[room]) {
+                if (scoreDatabase[room][course][id]) delete scoreDatabase[room][course][id];
+            }
+            localStorage.setItem("scoreDatabase", JSON.stringify(scoreDatabase));
+        }
+        renderAdminStudentTable();
+    }
+}
+
+function renderAdminTeacherTable() {
+    let tbody = document.getElementById("adminTeacherTableBody");
+    tbody.innerHTML = "";
+    
+    for (let username in teachersData) {
+        let teacherInfo = teachersData[username];
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="cell-bold" style="color: #4b5563;">${username}</td>
+            <td>${teacherInfo.pass}</td>
+            <td style="color:#1d4ed8; font-weight:bold;">${teacherInfo.courseId}</td>
+            <td style="text-align:left;">${teacherInfo.courseName}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-warning" onclick="startEditTeacher('${username}', '${teacherInfo.pass}', '${teacherInfo.courseId}', '${teacherInfo.courseName}')">✏️ แก้ไข</button>
+                    <button class="btn-danger" onclick="deleteTeacher('${username}')">🗑️ ลบ</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+function addNewTeacher() {
+    let user = document.getElementById("newTeacherUser").value.trim().toLowerCase();
+    let pass = document.getElementById("newTeacherPass").value.trim();
+    let courseId = document.getElementById("newTeacherCourseId").value.trim();
+    let courseName = document.getElementById("newTeacherCourseName").value.trim();
+    let oldUser = document.getElementById("editingTeacherOldUser").value;
+    
+    if (!user || !pass || !courseId || !courseName) { 
+        alert("กรุณากรอกข้อมูลให้ครบทุกช่องครับ!"); 
+        return; 
+    }
+    
+    if ((oldUser === "" || oldUser !== user) && (teachersData[user] || user === "admin")) { 
+        alert("ขออภัย! มีชื่อผู้ใช้นี้ในระบบแล้ว"); 
+        return; 
+    }
+    
+    if (oldUser !== "" && oldUser !== user) {
+        delete teachersData[oldUser];
+    }
+    
+    teachersData[user] = { pass: pass, courseId: courseId, courseName: courseName };
+    localStorage.setItem("teachersData", JSON.stringify(teachersData));
+    
+    courseNamesMap[courseId] = courseName;
+    localStorage.setItem("courseNamesMap", JSON.stringify(courseNamesMap));
+    
+    cancelEditTeacher();
+    renderAdminTeacherTable();
+    alert("👨‍🏫 บันทึกบัญชีผู้ใช้งานคุณครูเรียบร้อยแล้ว!");
+}
+
+function startEditTeacher(username, password, courseId, courseName) {
+    document.getElementById("newTeacherUser").value = username;
+    document.getElementById("newTeacherPass").value = password;
+    document.getElementById("newTeacherCourseId").value = courseId;
+    document.getElementById("newTeacherCourseName").value = courseName;
+    document.getElementById("editingTeacherOldUser").value = username;
+    
+    document.getElementById("btnTeacherSubmit").innerText = "💾 บันทึกการแก้ไข";
+    document.getElementById("btnCancelEditTeacher").style.display = "block";
+}
+
+function cancelEditTeacher() {
+    document.getElementById("newTeacherUser").value = "";
+    document.getElementById("newTeacherPass").value = "";
+    document.getElementById("newTeacherCourseId").value = "";
+    document.getElementById("newTeacherCourseName").value = "";
+    document.getElementById("editingTeacherOldUser").value = "";
+    
+    document.getElementById("btnTeacherSubmit").innerText = "➕ เพิ่มบัญชีครู";
+    document.getElementById("btnCancelEditTeacher").style.display = "none";
+}
+
+function deleteTeacher(username) {
+    if (confirm(`คุณต้องการลบบัญชีคุณครูของ: "${username}" ใช่หรือไม่?`)) {
+        delete teachersData[username];
+        localStorage.setItem("teachersData", JSON.stringify(teachersData));
+        renderAdminTeacherTable();
+    }
+}
+
+function showPage(pageId) {
+    document.querySelectorAll('.step-page').forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+}
+</script>
+</body>
+</html>
